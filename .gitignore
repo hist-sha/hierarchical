@@ -1,0 +1,19 @@
+# Ignore virtual environment  
+env/  
+venv/  
+
+# Ignore folder with temporary data  
+data/  
+
+# Ignore folder with unnecessary code  
+trash_code/  
+
+# Ignore editor settings  
+.vscode/  
+
+# Ignore cache and temporary files  
+__pycache__/  
+*.pyc  
+*.pyo  
+*.log  
+.DS_Store  
