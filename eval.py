@@ -1,3 +1,4 @@
+import logging
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,6 +12,9 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
 from torchvision import transforms
 from tqdm import tqdm
+
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
 def extract_coordinates(filename):
@@ -30,8 +34,7 @@ def extract_features(model, image_path, transform, device):
 def extract_all_features(model, patch_paths, device):
     features = []
     coords = []
-    transform = transforms.Compose(
-        [
+    transform = transforms.Compose([
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -73,11 +76,8 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs=5, device=
 
         epoch_loss = running_loss / len(train_loader)
         epoch_acc = correct_preds.double() / total_preds
-        print(
-            f"Epoch {epoch + 1}/{num_epochs} - Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.4f}"
-        )
-
-    print("Training complete.")
+        logging.info(f"Epoch {epoch + 1}/{num_epochs} - Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.4f}")
+    logging.info("Training complete")
 
 
 def evaluate_model(model, test_loader, device):
@@ -100,10 +100,10 @@ def evaluate_model(model, test_loader, device):
     f1 = f1_score(all_labels, all_preds, average="weighted")
     cm = confusion_matrix(all_labels, all_preds)
 
-    print(f"acc: {accuracy:.4f}")
-    print(f"F1: {f1:.4f}")
-    print("conf mtrx:")
-    print(cm)
+    logging.info(f"Accuracy: {accuracy:.4f}")
+    logging.info(f"F1 Score: {f1:.4f}")
+    logging.info("Confusion Matrix:")
+    logging.info(f"\n{cm}")
 
 
 def get_predictions_and_coords_from_loader(model, loader, device):
@@ -138,9 +138,7 @@ def plot_patches_with_labels(coords, labels, patch_size=224):
         for patch in patches:
             patch_size_x, patch_size_y, color = patch
             if patch_size_x is None or patch_size_y is None:
-                print(
-                    f"Warning: None size detected for patch at {coord}. Skipping this patch."
-                )
+                logging.warning(f"None size detected for patch at {coord}. Skipping this patch")
                 continue
             ax.add_patch(
                 mpatches.Rectangle(
@@ -154,8 +152,8 @@ def plot_patches_with_labels(coords, labels, patch_size=224):
                 )
             )
 
-    ax.set_xlim(0, 330)
-    ax.set_ylim(0, 250)
+    ax.set_xlim(0, 180)
+    ax.set_ylim(0, 375)
     ax.set_aspect("equal")
     ax.set_title("Patch positions with predicted labels")
 
@@ -164,6 +162,5 @@ def plot_patches_with_labels(coords, labels, patch_size=224):
         for i, color in class_colors.items()
     ]
     ax.legend(handles=legend_handles)
-
     plt.gca().invert_yaxis()
     plt.show()
