@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hierarchical"
+version = "0.1.0"
+description = "WSI patch extraction and simple dataset utils"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "torch",
+    "torchvision",
+    "matplotlib",
+    "numpy",
+    "pillow",
+    "openslide-python",
+    "scikit-learn",
+    "tqdm",
+]
+
+[tool.setuptools]
+packages = []
+py-modules = ["dataset", "eval", "extract_patches"]

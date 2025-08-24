@@ -1,9 +1,12 @@
+# dataset.py
 import torch
 import logging
 from torch.utils.data import Dataset, DataLoader
 
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +25,9 @@ class CustomDataset(Dataset):
         coord = self.coords[idx]
 
         if feature is None or label is None or coord is None:
-            logger.error(f"Error at index {idx}: one of the data points is None. Coordinates: {coord}")
+            logger.error(
+                f"Error at index {idx}: one of the data points is None. Coordinates: {coord}"
+            )
             return None
 
         return {
@@ -46,4 +51,6 @@ def custom_collate_fn(batch):
 
 def create_dataloader(features, labels, coords, batch_size=32):
     dataset = CustomDataset(features, labels, coords)
-    return DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn)
+    return DataLoader(
+        dataset, batch_size=batch_size, shuffle=True, collate_fn=custom_collate_fn
+    )

@@ -1,76 +1,93 @@
-# Project Overview
+# Hierarchical WSI Patch Pipeline
 
-This repository provides a comprehensive pipeline for extracting patches from whole-slide images (WSI) and performing clustering and classification tasks. It is specifically designed for analyzing histopathological images in cancer diagnosis. The code extracts image patches at multiple magnifications (2.5x, 10x, 20x), extracts features using a pre-trained `ResNet34` model, performs clustering via `K-Means`, and trains a Multi-Layer Perceptron (MLP) classifier without labels.
+## Overview
+This repository provides a focused pipeline for working with whole-slide images (WSI):
+
+* **Patch extraction** at multiple magnifications using OpenSlide and DeepZoom.
+* **Custom dataset** and safe collation logic for PyTorch.
+* **Feature extraction and clustering** with a pre-trained ResNet34 backbone and K-Means.
+* **Exploratory training and visualization** via notebook examples.
+
+The project is targeted at histopathology research, but the utilities are generic enough to be applied to other domains requiring tiled image analysis.
+
+---
 
 ## Code Structure
-- `extract_patches.py`: Handles patch extraction from WSIs using DeepZoomGenerator. Utilizes multiple worker processes to speed up extraction.
-- `dataset.py`: Defines a custom dataset class for managing patch data, including features, labels, and coordinates. Includes a custom collate function for batch creation.
-- `eval.py`: Extracts features with a pre-trained `ResNet34` model, applies `K-Means` clustering, visualization and evaluates  performance.
-- `main.ipynb`: The Jupyter notebook, as an example use case, combines feature extraction, clustering, and model training with an MLP classifier.
-- `requirements.txt`: Lists the Python dependencies required for the project.
+- **`extract_patches.py`**  
+  Parallel patch extraction from WSIs with configurable magnification levels, tile size, format, and filtering threshold. Uses multiple worker processes for throughput.
+
+- **`dataset.py`**  
+  Defines a `CustomDataset` for PyTorch that stores features, labels, and coordinates. Includes a robust `collate_fn` that gracefully handles `None` entries and logs errors or warnings.
+
+- **`eval.py`**  
+  Applies feature extraction via a pretrained ResNet34 model, clusters with K-Means, and provides visualization utilities for inspection of clustering results.
+
+- **`main.ipynb`**  
+  Demonstrates a full workflow: feature extraction, clustering, and training of an MLP classifier. Intended as an interactive exploration rather than production code.
+
+---
 
 ## Installation
 
-To set up the environment, use `pip` to install dependencies.
-
-### 1. Create a Virtual Environment
-First, create a virtual environment (if you haven't already):
-
-```
-python -m venv venv
-```
-
-Activate the virtual environment:
-* Windows:
-```
-venv\Scripts\activate
-```
-* Linux/macOS:
-```
-source venv/bin/activate
+### 1. Create a virtual environment
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Linux/macOS
+# or
+.venv\Scripts\activate      # Windows
 ```
 
-### 2. Install Dependencies
-Install the required dependencies using the requirements.txt file:
+### 2. Install dependencies
+This project uses a modern Python packaging workflow. Dependencies are declared in `pyproject.toml`. Install with your preferred tool, e.g.:
+
+```bash
+pip install .
+# or, if using uv
+uv sync
 ```
-pip install -r requirements.txt
-```
+
+---
 
 ## Usage
-### 1. Patch Extraction
-Use extract_patches.py to extract patches from whole-slide images (WSI). The extracted patches will be saved in the specified directory, filtered by an edge threshold.
+
+### Patch Extraction
+Run `extract_patches.py` to generate tiles from WSIs:
+
+```bash
+python extract_patches.py -i /path/to/wsi -o ./patches
 ```
-python extract_patches.py -i /path/to/WSI/files -o /output/directory
+
+**Key arguments:**
+- `-i, --input` — Path to input WSI file or directory.
+- `-o, --output` — Output directory for patches.
+- `-l, --levels` — List of magnification levels (default `[0,1,2]`).
+- `-t, --tile_size` — Patch size in pixels (default 224).
+- `-f, --format` — Output image format (default `jpeg`).
+- `-th, --threshold` — Edge-detection threshold for filtering (default 5).
+- `-w, --workers` — Number of parallel worker processes (default 20).
+
+### Feature Extraction & Clustering
+Use `eval.py` to compute patch embeddings with ResNet34 and cluster them via K-Means:
+
+```bash
+python eval.py --features ./patches --clusters 5
 ```
-Arguments:
 
-* `-i` or `--input`: Path to the input WSI file or directory.
-* `-o` or `--output`: Output directory for saved patches.
-* `-l` or `--levels`: List of magnification levels (e.g., [0, 1, 2]).
-* `-t` or `--tile_size`: Size of the extracted patches (default: 224).
-* `-f` or `--format`: Image format for saved patches (default: jpeg).
-* `-th` or `--threshold`: Edge detection threshold for filtering patches (default: 5).
-* `-w` or `--workers`: Number of worker processes (default: 20).
+### Model Training
+In `main.ipynb` you will find an example pipeline:
+1. Load extracted patch features.
+2. Cluster features to generate pseudo-labels.
+3. Train a lightweight MLP classifier.
+4. Evaluate using metrics such as accuracy and F1-score.
 
-### 2. Feature Extraction and Clustering
-Use `eval.py` to extract features using a pre-trained `ResNet34` model for patches at 2.5x, 10x, and 20x magnifications, followed by clustering the features using `K-Means` on the extracted features.
+### Visualization
+The notebook also demonstrates visualization of clustered patches and classification outputs, color-coded for intuitive inspection of tissue regions.
 
-### 3. Model Training
-Use the `main.ipynb` script to train a Multi-Layer Perceptron (MLP) model using the extracted features and labels. It also evaluates the model’s performance.
+---
 
-Steps:
-1. Load extracted features.
-2. Train the MLP model.
-3. Evaluate using `accuracy` and `F1-score`.
-   
-You can run the notebook in a Jupyter environment or execute it as a script.
+## Applications
+- **Cancer detection** — classification of tissue patches for diagnostic pipelines.
+- **Tumor localization** — identifying candidate tumor regions across WSIs.
+- **Research workflows** — scalable exploration of large-scale histology datasets.
 
-### 4. Visualizing Results
-After training, visualize predicted labels for patches with the following function. It displays patches and their predicted labels, color-coded for each class.
-
-## Where to Use This Code
-This repository is intended for medical image analysis, especially for histopathological images. Possible applications include:
-+ Cancer Detection: Classifying patches from histopathological slides for cancer diagnosis.
-+ Tumor Identification: Identifying regions of interest in tissue samples.
-+ Medical Research: Analyzing large datasets of histopathological images.
-The workflow is scalable and can be adapted to other image analysis tasks requiring patch-based processing and feature extraction.
+While designed for histopathology, the patch extraction and clustering utilities can generalize to any tiled image domain (remote sensing, materials science, etc.).
